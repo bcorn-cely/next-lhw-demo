@@ -15,7 +15,7 @@ export function ExclusiveRates() {
           </div>
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-xl font-semibold mb-4">Exclusive Rate Guarantee</h3>
-            <p className="mb-4">As a member, you're guaranteed to receive our best available rates, always lower than those found on other travel sites.</p>
+            <p className="mb-4">As a member, you&apos;re guaranteed to receive our best available rates, always lower than those found on other travel sites.</p>
             <button className="bg-gold text-white px-6 py-2 rounded hover:bg-gold-dark transition-colors">
               Join Leaders Club
             </button>
