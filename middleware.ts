@@ -5,7 +5,6 @@ import { lhwFlags } from './lib/flags';
 export const config = { matcher: ['/'] };
 
 export async function middleware(request: NextRequest) {
-  console.log('request ', request.url);
   // precompute returns a string encoding each flag's returned value
   const code = await precompute(lhwFlags);
 
