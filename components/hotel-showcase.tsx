@@ -21,7 +21,7 @@ export async function HotelShowcase() {
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-light text-center mb-4">WHERE TO NEXT?</h2>
           <p className="text-sm tracking-wide text-center max-w-3xl mx-auto mb-16 text-gray-600">
-            COMPRISED OF MORE THAN 400 HOTELS IN OVER 80 COUNTRIES, LEADING HOTELS' DISTINCT PROPERTIES MAKE UP
+            COMPRISED OF MORE THAN 400 HOTELS IN OVER 80 COUNTRIES, LEADING HOTELS DISTINCT PROPERTIES MAKE UP
             A COLLECTION OF INDEPENDENT AND UNCOMMON LUXURY HOTELS THROUGHOUT THE WORLD.
           </p>
           <div className="grid grid-cols-1 gap-y-8">

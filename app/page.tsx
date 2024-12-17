@@ -7,9 +7,8 @@ import { ExclusiveRates } from "@/components/exclusive-rates"
 import { PersonalizedRecommendations } from "@/components/personalized-recommendations"
 import { showLuxuryExperiences, enableVirtualConcierge, offerExclusiveRates, showPersonalizedRecommendations } from '../lib/flags'
 
-type Params = { code: string };
 
-export default async function Home({ params }: { params: Params }) {
+export default async function Home() {
   const luxuryExperiences = await showLuxuryExperiences();
   const virtualConcierge = await enableVirtualConcierge();
   const exclusiveRates = await offerExclusiveRates();
