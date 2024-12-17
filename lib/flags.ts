@@ -33,6 +33,14 @@ export const showPersonalizedRecommendations = flag({
   },
 });
 
+export const showNewShowcaseComponent = flag({
+  key: 'show-new-showcase-component',
+  async decide() {
+    const value = await get('show-new-showcase-component');
+    return value ?? false;
+  }
+})
+
 // a group of feature flags to be precomputed
 export const lhwFlags = [showLuxuryExperiences, enableVirtualConcierge, offerExclusiveRates, showPersonalizedRecommendations] as const;
 
