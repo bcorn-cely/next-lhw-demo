@@ -5,12 +5,11 @@ import { LuxuryExperiences } from "@/components/luxury-experiences"
 import { VirtualConcierge } from "@/components/virtual-concierge"
 import { ExclusiveRates } from "@/components/exclusive-rates"
 import { PersonalizedRecommendations } from "@/components/personalized-recommendations"
-import { lhwFlags, showLuxuryExperiences, enableVirtualConcierge, offerExclusiveRates, showPersonalizedRecommendations } from '../lib/flags'
+import { showLuxuryExperiences, enableVirtualConcierge, offerExclusiveRates, showPersonalizedRecommendations } from '../lib/flags'
 
 type Params = { code: string };
 
 export default async function Home({ params }: { params: Params }) {
-  const { code } = params;
   const luxuryExperiences = await showLuxuryExperiences();
   const virtualConcierge = await enableVirtualConcierge();
   const exclusiveRates = await offerExclusiveRates();
