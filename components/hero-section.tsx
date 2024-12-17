@@ -1,21 +1,23 @@
-'use client'
-
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ChevronRight } from 'lucide-react'
 import { SearchForm } from "./search-form"
+import { list } from '@vercel/blob';
 
-interface HeroSectionProps {
-  newDesign?: boolean;
+async function getHeroImage() {
+  const { blobs } = await list({prefix: 'lhw'});
+  const heroImage = blobs.find(blob => blob.pathname.includes('Luxurious'));
+  return heroImage ? heroImage.url : '/placeholder.svg';
 }
 
-export function HeroSection({ newDesign }: HeroSectionProps) {
-  console.log('new design ', newDesign);
+export async function HeroSection() {
+  const heroImageUrl = await getHeroImage();
+
   return (
     <div className="relative h-screen">
       <div className="absolute inset-0">
         <Image
-          src="/placeholder.svg"
+          src={`${heroImageUrl}`}
           alt="Luxury Hotel View"
           fill
           className="object-cover"

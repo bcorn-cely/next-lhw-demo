@@ -1,7 +1,16 @@
+import { list } from "@vercel/blob"
 import Image from "next/image"
 import Link from "next/link"
 
-export function FeaturedSection() {
+async function getFeaturedImages() {
+  const { blobs } = await list( {prefix: 'lhw' });
+  const images = blobs.filter(image => !image.pathname.includes('Luxurious'));
+  return images.slice(5);
+}
+
+export async function FeaturedSection() {
+  const hotelImages = await getFeaturedImages();
+
   return (
     <section className="py-20 px-4">
       <div className="max-w-6xl mx-auto text-center">
@@ -13,7 +22,7 @@ export function FeaturedSection() {
           <Link href="/insider-offers" className="group relative">
             <div className="aspect-[4/3] relative overflow-hidden rounded-lg">
               <Image
-                src="/placeholder.svg"
+                src={hotelImages[0].url}
                 alt="Insider Offers"
                 fill
                 className="object-cover transition-transform group-hover:scale-105"
@@ -29,7 +38,7 @@ export function FeaturedSection() {
           <Link href="/prepay-save" className="group relative">
             <div className="aspect-[4/3] relative overflow-hidden rounded-lg">
               <Image
-                src="/placeholder.svg"
+                src={hotelImages[1].url}
                 alt="Prepay and Save"
                 fill
                 className="object-cover transition-transform group-hover:scale-105"
@@ -43,7 +52,7 @@ export function FeaturedSection() {
           <Link href="/design-collection" className="group relative">
             <div className="aspect-[4/3] relative overflow-hidden rounded-lg">
               <Image
-                src="/placeholder.svg"
+                src={hotelImages[2].url}
                 alt="Design Collection"
                 fill
                 className="object-cover transition-transform group-hover:scale-105"
