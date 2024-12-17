@@ -35,6 +35,13 @@ export async function GET(request: NextRequest) {
 					{ value: true, label: 'On' }
 				]
 			},
+			showNewShowcaseComponent: {
+				description: 'Shows v2 of hotel showcase component',
+				options: [
+					{ value: false, label: 'Off' },
+					{ value: true, label: 'On' }
+				]
+			}
     },
   });
 }
