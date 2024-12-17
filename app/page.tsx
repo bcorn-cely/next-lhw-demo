@@ -5,7 +5,8 @@ import { LuxuryExperiences } from "@/components/luxury-experiences"
 import { VirtualConcierge } from "@/components/virtual-concierge"
 import { ExclusiveRates } from "@/components/exclusive-rates"
 import { PersonalizedRecommendations } from "@/components/personalized-recommendations"
-import { showLuxuryExperiences, enableVirtualConcierge, offerExclusiveRates, showPersonalizedRecommendations } from '../lib/flags'
+import { NewHotelShowcase } from '@/components/hotel-showcase-new';
+import { showLuxuryExperiences, enableVirtualConcierge, offerExclusiveRates, showPersonalizedRecommendations, showNewShowcaseComponent } from '../lib/flags'
 
 
 export default async function Home() {
@@ -13,6 +14,7 @@ export default async function Home() {
   const virtualConcierge = await enableVirtualConcierge();
   const exclusiveRates = await offerExclusiveRates();
   const personalizedRecommendations = await showPersonalizedRecommendations();
+  const newShowcaseComponent = await showNewShowcaseComponent();
 
   return (
     <main>
@@ -22,7 +24,7 @@ export default async function Home() {
       {virtualConcierge && <VirtualConcierge />}
       {exclusiveRates && <ExclusiveRates />}
       {personalizedRecommendations && <PersonalizedRecommendations />}
-      <HotelShowcase />
+      {newShowcaseComponent ? <NewHotelShowcase /> : <HotelShowcase />}
     </main>
   )
 }

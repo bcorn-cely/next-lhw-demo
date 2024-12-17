@@ -42,5 +42,5 @@ export const showNewShowcaseComponent = flag({
 })
 
 // a group of feature flags to be precomputed
-export const lhwFlags = [showLuxuryExperiences, enableVirtualConcierge, offerExclusiveRates, showPersonalizedRecommendations] as const;
+export const lhwFlags = [showLuxuryExperiences, enableVirtualConcierge, offerExclusiveRates, showPersonalizedRecommendations, showNewShowcaseComponent] as const;
 

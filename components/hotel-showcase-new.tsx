@@ -10,7 +10,7 @@ async function getHotelImages() {
   return images.slice(1);
 }
 
-export async function HotelShowcase() {
+export async function NewHotelShowcase() {
   const hotelImages = await getHotelImages();
   const images1 = hotelImages.slice(1,3);
   const images2 = hotelImages.slice(3,5);
