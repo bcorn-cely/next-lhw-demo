@@ -1,7 +1,20 @@
 import Image from "next/image"
 import Link from "next/link"
+import { list } from '@vercel/blob';
 
-export function HotelShowcase() {
+export const revalidate = 86400;
+
+async function getHotelImages() {
+  const { blobs } = await list({prefix: 'lhw'});
+  const images = blobs.filter(image => !image.pathname.includes('Luxurious'));
+  return images.slice(1);
+}
+
+export async function HotelShowcase() {
+  const hotelImages = await getHotelImages();
+  const images1 = hotelImages.slice(1,3);
+  const images2 = hotelImages.slice(3,5);
+
   return (
     <section className="py-20 px-4 bg-gray-50">
       <div className="max-w-6xl mx-auto text-center">
@@ -14,11 +27,11 @@ export function HotelShowcase() {
           <div>
             <h3 className="text-2xl font-semibold mb-6">NEW MEMBER HOTELS</h3>
             <div className="grid gap-6">
-              {[1, 2].map((index) => (
+              {images1.map((image,index) => (
                 <Link key={index} href={`/hotels/${index}`} className="group">
                   <div className="aspect-[16/9] relative overflow-hidden rounded-lg">
                     <Image
-                      src="/placeholder.svg"
+                      src={image.url}
                       alt={`New Member Hotel ${index}`}
                       fill
                       className="object-cover transition-transform group-hover:scale-105"
@@ -31,11 +44,11 @@ export function HotelShowcase() {
           <div>
             <h3 className="text-2xl font-semibold mb-6">MOST POPULAR HOTELS</h3>
             <div className="grid gap-6">
-              {[1, 2].map((index) => (
+              {images2.map((image, index) => (
                 <Link key={index} href={`/hotels/${index}`} className="group">
                   <div className="aspect-[16/9] relative overflow-hidden rounded-lg">
                     <Image
-                      src="/placeholder.svg"
+                      src={image.url}
                       alt={`Popular Hotel ${index}`}
                       fill
                       className="object-cover transition-transform group-hover:scale-105"

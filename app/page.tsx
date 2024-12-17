@@ -11,14 +11,14 @@ type Params = { code: string };
 
 export default async function Home({ params }: { params: Params }) {
   const { code } = params;
-  const luxuryExperiences = await showLuxuryExperiences(code, lhwFlags);
-  const virtualConcierge = await enableVirtualConcierge(code, lhwFlags);
-  const exclusiveRates = await offerExclusiveRates(code, lhwFlags);
-  const personalizedRecommendations = await showPersonalizedRecommendations(code, lhwFlags);
+  const luxuryExperiences = await showLuxuryExperiences();
+  const virtualConcierge = await enableVirtualConcierge();
+  const exclusiveRates = await offerExclusiveRates();
+  const personalizedRecommendations = await showPersonalizedRecommendations();
 
   return (
     <main>
-      <HeroSection newDesign={false}/>
+      <HeroSection />
       <FeaturedSection />
       {luxuryExperiences && <LuxuryExperiences />}
       {virtualConcierge && <VirtualConcierge />}
