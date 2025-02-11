@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { unstable_precompute as precompute } from '@vercel/flags/next';
+import { precompute } from '@vercel/flags/next';
 import { lhwFlags } from './lib/flags';
 
 export const config = { matcher: ['/'] };

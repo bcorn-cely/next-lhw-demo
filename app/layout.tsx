@@ -4,7 +4,7 @@ import "./globals.css"
 import { Header } from "@/components/header"
 import { lhwFlags } from '../lib/flags'
 import { encrypt } from '@vercel/flags';
-import { unstable_deserialize as deserialize } from '@vercel/flags/next';
+import { deserialize } from '@vercel/flags/next';
 import { FlagValues } from '@vercel/flags/react';
 import { Suspense } from 'react'
 import { headers } from 'next/headers';
