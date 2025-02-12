@@ -9,6 +9,12 @@ import { showLuxuryExperiences, enableVirtualConcierge, offerExclusiveRates, sho
 
 type Params = Promise<{ code: string }>;
 
+export async function generateStaticParams() {
+  // returning an empty array is enough to enable ISR
+  
+  return [];
+}
+
 
 export default async function Home({ params }: { params: Params}) {
   const { code } = await params;

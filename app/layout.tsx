@@ -11,11 +11,6 @@ export const metadata: Metadata = {
   description: "Discover the experiences that forever spark the spirit and inspire the soul.",
 }
 
-export async function generateStaticParams() {
-  // returning an empty array is enough to enable ISR
-  return [];
-}
-
 export default async function RootLayout({
   children,
 }: {
