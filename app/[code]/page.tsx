@@ -5,16 +5,17 @@ import { LuxuryExperiences } from "@/components/luxury-experiences"
 import { VirtualConcierge } from "@/components/virtual-concierge"
 import { ExclusiveRates } from "@/components/exclusive-rates"
 import { PersonalizedRecommendations } from "@/components/personalized-recommendations"
-import { showLuxuryExperiences, enableVirtualConcierge, offerExclusiveRates, showPersonalizedRecommendations, lhwFlags } from '../lib/flags'
-import { headers } from "next/headers"
+import { showLuxuryExperiences, enableVirtualConcierge, offerExclusiveRates, showPersonalizedRecommendations, lhwFlags } from '../../lib/flags'
+
+type Params = Promise<{ code: string }>;
 
 
-export default async function Home() {
-  const code = await headers().get('x-precomputed-flags') ?? 'This will have a value';
-  const luxuryExperiences = await showLuxuryExperiences(code, lhwFlags);
-  const virtualConcierge = await enableVirtualConcierge(code, lhwFlags);
-  const exclusiveRates = await offerExclusiveRates(code, lhwFlags);
-  const personalizedRecommendations = await showPersonalizedRecommendations(code, lhwFlags);
+export default async function Home({ params }: { params: Params}) {
+  const { code } = await params;
+  const luxuryExperiences = await showLuxuryExperiences(code, lhwFlags)
+  const virtualConcierge = await enableVirtualConcierge(code, lhwFlags)
+  const exclusiveRates = await offerExclusiveRates(code, lhwFlags)
+  const personalizedRecommendations = await showPersonalizedRecommendations(code, lhwFlags)
 
   return (
     <main>
@@ -23,7 +24,7 @@ export default async function Home() {
       {luxuryExperiences && <LuxuryExperiences />}
       {virtualConcierge && <VirtualConcierge />}
       {exclusiveRates && <ExclusiveRates />}
-      {personalizedRecommendations && <PersonalizedRecommendations />}
+      {personalizedRecommendations && <PersonalizedRecommendations />} 
       <HotelShowcase />
     </main>
   )
