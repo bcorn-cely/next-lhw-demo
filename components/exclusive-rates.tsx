@@ -1,12 +1,15 @@
+import { draftMode } from "next/headers"
+
 import { ExclusiveRatesContent, getExclusiveRatesContent } from "@/lib/contentful"
 
 
 export async function ExclusiveRates() {
-  const content: ExclusiveRatesContent['fields'] | null = await getExclusiveRatesContent()
+  const { isEnabled } = draftMode();
+  const content: ExclusiveRatesContent['fields'] | null = await getExclusiveRatesContent(isEnabled)
   if (!content) {
     return null // Or return a fallback UI
   }
-  
+
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
