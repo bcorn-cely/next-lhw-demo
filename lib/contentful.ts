@@ -1,14 +1,24 @@
 import { createClient } from "contentful"
-import { EntrySkeletonType } from "contentful"
 
-export interface ExclusiveRatesContent {
-  title: string
-  subtitle: string
-  leadersBenefitsTitle: string
-  leadersBenefits: EntrySkeletonType[]
-  rateGuaranteeTitle: string
-  rateGuaranteeDescription: string
-  ctaText: string
+export type LeadersBenefits = {
+  contentTypeId: 'leadersBenefits'
+  fields: {
+    title: string,
+    description: string
+  }
+}
+
+export type ExclusiveRatesContent = {
+  contentTypeId: 'exclusivesRates',
+  fields: {
+    title: string
+    subtitle: string
+    leadersBenefitsTitle: string
+    leadersBenefits: LeadersBenefits[]
+    rateGuaranteeTitle: string
+    rateGuaranteeDescription: string
+    ctaText: string
+  }
 }
 
 const client = createClient({
@@ -18,7 +28,7 @@ const client = createClient({
 
 export async function getExclusiveRatesContent() {
   try {
-    const entries = await client.getEntries({
+    const entries = await client.getEntries<ExclusiveRatesContent>({
       content_type: "exclusivesRates",
       include: 2,
     })
@@ -27,7 +37,7 @@ export async function getExclusiveRatesContent() {
       return null
     }
 
-    return entries.items[0].fields
+    return entries.items[0].fields;
   } catch (error) {
     console.error("Error fetching exclusive rates content:", error)
     return null

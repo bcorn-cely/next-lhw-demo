@@ -2,11 +2,11 @@ import { ExclusiveRatesContent, getExclusiveRatesContent } from "@/lib/contentfu
 
 
 export async function ExclusiveRates() {
-  const content: ExclusiveRatesContent | null = await getExclusiveRatesContent()
+  const content: ExclusiveRatesContent['fields'] | null = await getExclusiveRatesContent()
   if (!content) {
     return null // Or return a fallback UI
   }
-
+  
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
