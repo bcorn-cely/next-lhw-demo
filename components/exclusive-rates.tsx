@@ -1,11 +1,17 @@
 import { draftMode } from "next/headers"
-
+import { unstable_cache as cache } from "next/cache";
 import { ExclusiveRatesContent, getExclusiveRatesContent } from "@/lib/contentful"
 
 
+const cachedGetExclusivesRatesContent = cache(
+  async (isEnabled: boolean) => getExclusiveRatesContent(isEnabled),
+  ['exclusivesRates'],
+  { tags: ['exclusivesRates'], revalidate: 3600 }
+)
+
 export async function ExclusiveRates() {
   const { isEnabled } = draftMode();
-  const content: ExclusiveRatesContent['fields'] | null = await getExclusiveRatesContent(isEnabled)
+  const content: ExclusiveRatesContent['fields'] | null = await cachedGetExclusivesRatesContent(isEnabled)
   if (!content) {
     return null // Or return a fallback UI
   }
