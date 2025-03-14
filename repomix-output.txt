@@ -1,0 +1,1805 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+================================================================
+File Summary
+================================================================
+
+Purpose:
+--------
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+
+File Format:
+------------
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Multiple file entries, each consisting of:
+  a. A separator line (================)
+  b. The file path (File: path/to/file)
+  c. Another separator line
+  d. The full contents of the file
+  e. A blank line
+
+Usage Guidelines:
+-----------------
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+
+Notes:
+------
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+
+Additional Info:
+----------------
+
+================================================================
+Directory Structure
+================================================================
+app/
+  .well-known/
+    vercel/
+      flags/
+        route.ts
+  [code]/
+    page.tsx
+  api/
+    enable-draft/
+      route.ts
+    preview/
+      route.ts
+    revalidate/
+      route.ts
+  globals.css
+  layout.tsx
+components/
+  ui/
+    button.tsx
+    calendar.tsx
+    input.tsx
+    popover.tsx
+    select.tsx
+  contentful-preview-provider.tsx
+  exclusive-rates.tsx
+  featured-section.tsx
+  header.tsx
+  hero-carousel.tsx
+  hero-section.tsx
+  hotel-showcase.tsx
+  luxury-experiences.tsx
+  personalized-recommendations.tsx
+  search-form.tsx
+  virtual-concierge.tsx
+lib/
+  contentful.ts
+  flags.ts
+  utils.ts
+.eslintrc.json
+.gitignore
+components.json
+middleware.ts
+next.config.mjs
+package.json
+postcss.config.mjs
+README.md
+script.mjs
+tailwind.config.ts
+tsconfig.json
+
+================================================================
+Files
+================================================================
+
+================
+File: app/.well-known/vercel/flags/route.ts
+================
+import { NextResponse, type NextRequest } from 'next/server';
+import { verifyAccess, type ApiData } from '@vercel/flags';
+import { getProviderData } from '@vercel/flags/next';
+import * as allFlag from '../../../../lib/flags';
+ 
+export async function GET(request: NextRequest) {
+  const access = await verifyAccess(request.headers.get('Authorization'));
+  if (!access) return NextResponse.json(null, { status: 401 });
+  const { lhwFlags, ...flags } = allFlag;
+  const data = getProviderData(flags);
+  return NextResponse.json<ApiData>(data);
+
+}
+
+================
+File: app/[code]/page.tsx
+================
+import { HeroSection } from "@/components/hero-section"
+import { FeaturedSection } from "@/components/featured-section"
+import { HotelShowcase } from "@/components/hotel-showcase"
+import { LuxuryExperiences } from "@/components/luxury-experiences"
+import { VirtualConcierge } from "@/components/virtual-concierge"
+import { ExclusiveRates } from "@/components/exclusive-rates"
+import { PersonalizedRecommendations } from "@/components/personalized-recommendations"
+import { showLuxuryExperiences, enableVirtualConcierge, offerExclusiveRates, showPersonalizedRecommendations, lhwFlags } from '../../lib/flags'
+
+type Params = Promise<{ code: string }>;
+
+export async function generateStaticParams() {
+  // returning an empty array is enough to enable ISR
+  
+  return [];
+}
+
+
+export default async function Home({ params }: { params: Params}) {
+  const { code } = await params;
+  const luxuryExperiences = await showLuxuryExperiences(code, lhwFlags)
+  const virtualConcierge = await enableVirtualConcierge(code, lhwFlags)
+  const exclusiveRates = await offerExclusiveRates(code, lhwFlags)
+  const personalizedRecommendations = await showPersonalizedRecommendations(code, lhwFlags)
+
+  return (
+    <main>
+      <HeroSection />
+      <FeaturedSection />
+      {luxuryExperiences && <LuxuryExperiences />}
+      {virtualConcierge && <VirtualConcierge />}
+      {exclusiveRates && <ExclusiveRates />}
+      {personalizedRecommendations && <PersonalizedRecommendations />} 
+      <HotelShowcase />
+    </main>
+  )
+}
+
+================
+File: app/api/enable-draft/route.ts
+================
+export { enableDraftHandler as GET } from "@contentful/vercel-nextjs-toolkit/app-router"
+
+================
+File: app/api/preview/route.ts
+================
+import { draftMode } from 'next/headers'
+import { redirect } from 'next/navigation'
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const secret = searchParams.get('secret')
+  const slug = searchParams.get('slug')
+  // Check the secret and next parameters
+  // This secret should only be known to this route handler and the CMS
+  if (secret !== process.env.CONTENTFUL_PREVIEW_SECRET || !slug) {
+    return new Response('Invalid token', { status: 401 })
+  }
+
+  // Enable Draft Mode by setting the cookie
+  draftMode().enable()
+
+  // Redirect to the path from the fetched post
+  // We don't redirect to searchParams.slug as that might lead to open redirect vulnerabilities
+  redirect(`/`)
+}
+
+================
+File: app/api/revalidate/route.ts
+================
+import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
+
+export async function POST(request: NextRequest) {
+  const requestHeaders = new Headers(request.headers);
+  const secret = requestHeaders.get("x-vercel-reval-key");
+
+  if (secret !== process.env.CONTENTFUL_REVALIDATE_SECRET) {
+    return NextResponse.json({ message: "Invalid secret" }, { status: 401 });
+  }
+
+  revalidateTag("exclusivesRates");
+
+  return NextResponse.json({ revalidated: true, now: Date.now() });
+}
+
+================
+File: app/globals.css
+================
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+================
+File: app/layout.tsx
+================
+import type { Metadata } from "next"
+import { Playfair_Display } from 'next/font/google'
+import { VercelToolbar } from "@vercel/toolbar/next"
+import "./globals.css"
+import { Header } from "@/components/header"
+
+const playfair = Playfair_Display({ subsets: ["latin"] })
+
+export const metadata: Metadata = {
+  title: "The Leading Hotels of the World",
+  description: "Discover the experiences that forever spark the spirit and inspire the soul.",
+}
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+  params: { code: string }
+}) {
+  
+  const shouldInjectToolbar = process.env.NODE_ENV === 'development' ? true : false;
+  return (
+    <html lang="en">
+      <body className={playfair.className}>
+        <Header />
+        {children}
+        {shouldInjectToolbar && <VercelToolbar />}
+      </body>
+    </html>
+  )
+}
+
+================
+File: components/ui/button.tsx
+================
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default:
+          "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md px-3 text-xs",
+        lg: "h-10 rounded-md px-8",
+        icon: "h-9 w-9",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
+
+export { Button, buttonVariants }
+
+================
+File: components/ui/calendar.tsx
+================
+"use client"
+
+import * as React from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { DayPicker } from "react-day-picker"
+
+import { cn } from "@/lib/utils"
+import { buttonVariants } from "@/components/ui/button"
+
+export type CalendarProps = React.ComponentProps<typeof DayPicker>
+
+function Calendar({
+  className,
+  classNames,
+  showOutsideDays = true,
+  ...props
+}: CalendarProps) {
+  return (
+    <DayPicker
+      showOutsideDays={showOutsideDays}
+      className={cn("p-3", className)}
+      classNames={{
+        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+        month: "space-y-4",
+        caption: "flex justify-center pt-1 relative items-center",
+        caption_label: "text-sm font-medium",
+        nav: "space-x-1 flex items-center",
+        nav_button: cn(
+          buttonVariants({ variant: "outline" }),
+          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+        ),
+        nav_button_previous: "absolute left-1",
+        nav_button_next: "absolute right-1",
+        table: "w-full border-collapse space-y-1",
+        head_row: "flex",
+        head_cell:
+          "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem]",
+        row: "flex w-full mt-2",
+        cell: cn(
+          "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-range-end)]:rounded-r-md",
+          props.mode === "range"
+            ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
+            : "[&:has([aria-selected])]:rounded-md"
+        ),
+        day: cn(
+          buttonVariants({ variant: "ghost" }),
+          "h-8 w-8 p-0 font-normal aria-selected:opacity-100"
+        ),
+        day_range_start: "day-range-start",
+        day_range_end: "day-range-end",
+        day_selected:
+          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+        day_today: "bg-accent text-accent-foreground",
+        day_outside:
+          "day-outside text-muted-foreground aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
+        day_disabled: "text-muted-foreground opacity-50",
+        day_range_middle:
+          "aria-selected:bg-accent aria-selected:text-accent-foreground",
+        day_hidden: "invisible",
+        ...classNames,
+      }}
+      components={{
+        IconLeft: ({ className, ...props }) => (
+          <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
+        ),
+        IconRight: ({ className, ...props }) => (
+          <ChevronRight className={cn("h-4 w-4", className)} {...props} />
+        ),
+      }}
+      {...props}
+    />
+  )
+}
+Calendar.displayName = "Calendar"
+
+export { Calendar }
+
+================
+File: components/ui/input.tsx
+================
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+  ({ className, type, ...props }, ref) => {
+    return (
+      <input
+        type={type}
+        className={cn(
+          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Input.displayName = "Input"
+
+export { Input }
+
+================
+File: components/ui/popover.tsx
+================
+"use client"
+
+import * as React from "react"
+import * as PopoverPrimitive from "@radix-ui/react-popover"
+
+import { cn } from "@/lib/utils"
+
+const Popover = PopoverPrimitive.Root
+
+const PopoverTrigger = PopoverPrimitive.Trigger
+
+const PopoverAnchor = PopoverPrimitive.Anchor
+
+const PopoverContent = React.forwardRef<
+  React.ElementRef<typeof PopoverPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
+>(({ className, align = "center", sideOffset = 4, ...props }, ref) => (
+  <PopoverPrimitive.Portal>
+    <PopoverPrimitive.Content
+      ref={ref}
+      align={align}
+      sideOffset={sideOffset}
+      className={cn(
+        "z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+        className
+      )}
+      {...props}
+    />
+  </PopoverPrimitive.Portal>
+))
+PopoverContent.displayName = PopoverPrimitive.Content.displayName
+
+export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor }
+
+================
+File: components/ui/select.tsx
+================
+"use client"
+
+import * as React from "react"
+import * as SelectPrimitive from "@radix-ui/react-select"
+import { Check, ChevronDown, ChevronUp } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+const Select = SelectPrimitive.Root
+
+const SelectGroup = SelectPrimitive.Group
+
+const SelectValue = SelectPrimitive.Value
+
+const SelectTrigger = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
+>(({ className, children, ...props }, ref) => (
+  <SelectPrimitive.Trigger
+    ref={ref}
+    className={cn(
+      "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      className
+    )}
+    {...props}
+  >
+    {children}
+    <SelectPrimitive.Icon asChild>
+      <ChevronDown className="h-4 w-4 opacity-50" />
+    </SelectPrimitive.Icon>
+  </SelectPrimitive.Trigger>
+))
+SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
+
+const SelectScrollUpButton = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.ScrollUpButton>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollUpButton>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.ScrollUpButton
+    ref={ref}
+    className={cn(
+      "flex cursor-default items-center justify-center py-1",
+      className
+    )}
+    {...props}
+  >
+    <ChevronUp className="h-4 w-4" />
+  </SelectPrimitive.ScrollUpButton>
+))
+SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName
+
+const SelectScrollDownButton = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.ScrollDownButton>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollDownButton>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.ScrollDownButton
+    ref={ref}
+    className={cn(
+      "flex cursor-default items-center justify-center py-1",
+      className
+    )}
+    {...props}
+  >
+    <ChevronDown className="h-4 w-4" />
+  </SelectPrimitive.ScrollDownButton>
+))
+SelectScrollDownButton.displayName =
+  SelectPrimitive.ScrollDownButton.displayName
+
+const SelectContent = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
+>(({ className, children, position = "popper", ...props }, ref) => (
+  <SelectPrimitive.Portal>
+    <SelectPrimitive.Content
+      ref={ref}
+      className={cn(
+        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+        position === "popper" &&
+          "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
+        className
+      )}
+      position={position}
+      {...props}
+    >
+      <SelectScrollUpButton />
+      <SelectPrimitive.Viewport
+        className={cn(
+          "p-1",
+          position === "popper" &&
+            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
+        )}
+      >
+        {children}
+      </SelectPrimitive.Viewport>
+      <SelectScrollDownButton />
+    </SelectPrimitive.Content>
+  </SelectPrimitive.Portal>
+))
+SelectContent.displayName = SelectPrimitive.Content.displayName
+
+const SelectLabel = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Label>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.Label
+    ref={ref}
+    className={cn("px-2 py-1.5 text-sm font-semibold", className)}
+    {...props}
+  />
+))
+SelectLabel.displayName = SelectPrimitive.Label.displayName
+
+const SelectItem = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
+>(({ className, children, ...props }, ref) => (
+  <SelectPrimitive.Item
+    ref={ref}
+    className={cn(
+      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      className
+    )}
+    {...props}
+  >
+    <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
+      <SelectPrimitive.ItemIndicator>
+        <Check className="h-4 w-4" />
+      </SelectPrimitive.ItemIndicator>
+    </span>
+    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+  </SelectPrimitive.Item>
+))
+SelectItem.displayName = SelectPrimitive.Item.displayName
+
+const SelectSeparator = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Separator>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.Separator
+    ref={ref}
+    className={cn("-mx-1 my-1 h-px bg-muted", className)}
+    {...props}
+  />
+))
+SelectSeparator.displayName = SelectPrimitive.Separator.displayName
+
+export {
+  Select,
+  SelectGroup,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectLabel,
+  SelectItem,
+  SelectSeparator,
+  SelectScrollUpButton,
+  SelectScrollDownButton,
+}
+
+================
+File: components/contentful-preview-provider.tsx
+================
+'use client';
+
+import { ContentfulLivePreviewInitConfig } from '@contentful/live-preview';
+import { ContentfulLivePreviewProvider } from '@contentful/live-preview/react';
+import { PropsWithChildren } from 'react';
+
+export function ContentfulPreviewProvider({
+  children,
+  ...props
+}: PropsWithChildren<ContentfulLivePreviewInitConfig>) {
+  return <ContentfulLivePreviewProvider {...props}>{children}</ContentfulLivePreviewProvider>
+}
+
+================
+File: components/exclusive-rates.tsx
+================
+import { draftMode } from "next/headers"
+import { unstable_cache as cache } from "next/cache";
+import { ExclusiveRatesContent, getExclusiveRatesContent } from "@/lib/contentful"
+
+
+const cachedGetExclusivesRatesContent = cache(
+  async (isEnabled: boolean) => getExclusiveRatesContent(isEnabled),
+  ['exclusivesRates'],
+  { tags: ['exclusivesRates'], revalidate: 3600 }
+)
+
+export async function ExclusiveRates() {
+  const { isEnabled } = draftMode();
+  const content: ExclusiveRatesContent['fields'] | null = await cachedGetExclusivesRatesContent(isEnabled)
+  if (!content) {
+    return null // Or return a fallback UI
+  }
+
+  return (
+    <section className="py-16 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl font-bold mb-2 text-center">{content.title}</h2>
+        <p className="text-center text-gray-600 mb-8">{content.subtitle}</p>
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-xl font-semibold mb-4">{content.leadersBenefitsTitle}</h3>
+            <ul className="list-disc pl-5 space-y-2">
+              {content.leadersBenefits.map((benefit, index) => {
+                const data = benefit.fields;
+                return (
+                  <li key={index}>
+                    <span className="font-medium">{data.title}:</span> {data.description}
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-xl font-semibold mb-4">{content.rateGuaranteeTitle}</h3>
+            <p className="mb-4">{content.rateGuaranteeDescription}</p>
+            <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors">
+              {content.ctaText}
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+================
+File: components/featured-section.tsx
+================
+import { list } from "@vercel/blob"
+import Image from "next/image"
+import Link from "next/link"
+
+async function getFeaturedImages() {
+  const { blobs } = await list( {prefix: 'lhw' });
+  const images = blobs.filter(image => !image.pathname.includes('Luxurious'));
+  return images.slice(5);
+}
+
+export async function FeaturedSection() {
+  const hotelImages = await getFeaturedImages();
+
+  return (
+    <section className="py-20 px-4">
+      <div className="max-w-6xl mx-auto text-center">
+        <h2 className="text-4xl md:text-5xl font-bold mb-4">PURSUE THE REMARKABLE</h2>
+        <p className="text-lg text-muted-foreground mb-12">
+          DISCOVER THE EXPERIENCES THAT FOREVER SPARK THE SPIRIT AND INSPIRE THE SOUL.
+        </p>
+        <div className="grid md:grid-cols-3 gap-8">
+          <Link href="/insider-offers" className="group relative">
+            <div className="aspect-[4/3] relative overflow-hidden rounded-lg">
+              <Image
+                src={hotelImages[0].url}
+                alt="Insider Offers"
+                fill
+                className="object-cover transition-transform group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/40" />
+              <div className="absolute inset-0 flex items-center justify-center text-white p-6 text-center">
+                <p className="text-xl font-medium">
+                  Venture beyond the ordinary with insider offers take you beyond the tourist attractions.
+                </p>
+              </div>
+            </div>
+          </Link>
+          <Link href="/prepay-save" className="group relative">
+            <div className="aspect-[4/3] relative overflow-hidden rounded-lg">
+              <Image
+                src={hotelImages[1].url}
+                alt="Prepay and Save"
+                fill
+                className="object-cover transition-transform group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/40" />
+              <div className="absolute inset-0 flex items-center justify-center text-white">
+                <p className="text-2xl font-medium">PREPAY AND SAVE</p>
+              </div>
+            </div>
+          </Link>
+          <Link href="/design-collection" className="group relative">
+            <div className="aspect-[4/3] relative overflow-hidden rounded-lg">
+              <Image
+                src={hotelImages[2].url}
+                alt="Design Collection"
+                fill
+                className="object-cover transition-transform group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/40" />
+              <div className="absolute inset-0 flex items-center justify-center text-white">
+                <p className="text-2xl font-medium">THE DESIGN COLLECTION</p>
+              </div>
+            </div>
+          </Link>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+================
+File: components/header.tsx
+================
+'use client'
+
+import Link from "next/link"
+import Image from "next/image"
+import { useState } from "react"
+import { ChevronDown, Globe, HelpCircle, ShoppingBag, User, Search } from 'lucide-react'
+import { Button } from "@/components/ui/button"
+
+export function Header() {
+  const [language, ] = useState("ENGLISH")
+  
+  return (
+    <header className="absolute top-0 left-0 right-0 z-50">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          <Link href="/" className="flex items-center space-x-4">
+            <Image
+              src="/placeholder.svg"
+              alt="LHW Logo"
+              width={80}
+              height={80}
+              className="h-16 w-auto"
+            />
+          </Link>
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" size="sm" className="text-white text-xs">
+              <HelpCircle className="h-4 w-4 mr-2" />
+              HELP
+            </Button>
+            <div className="relative">
+              <Button variant="ghost" size="sm" className="text-white text-xs">
+                <Globe className="h-4 w-4 mr-2" />
+                {language}
+                <ChevronDown className="h-3 w-3 ml-1" />
+              </Button>
+            </div>
+            <Button variant="ghost" size="sm" className="text-white text-xs">
+              <User className="h-4 w-4 mr-2" />
+              LOG IN
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-white text-xs border-white hover:bg-white hover:text-black transition-colors bg-transparent rounded-full px-6"
+            >
+              JOIN NOW
+            </Button>
+            <Button variant="ghost" size="sm" className="text-white">
+              <Search className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="text-white">
+              <ShoppingBag className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        <nav className="mt-8">
+          <div className="flex justify-center space-x-16">
+            <Link href="/find-hotel" className="text-white hover:text-gray-200 text-sm tracking-wider">
+              FIND A HOTEL
+            </Link>
+            <Link href="/inspired" className="text-white hover:text-gray-200 text-sm tracking-wider">
+              GET INSPIRED
+            </Link>
+            <Link href="/offers" className="text-white hover:text-gray-200 text-sm tracking-wider">
+              OFFERS
+            </Link>
+            <Link href="/club" className="text-white hover:text-gray-200 text-sm tracking-wider">
+              LEADERS CLUB
+            </Link>
+          </div>
+        </nav>
+      </div>
+    </header>
+  )
+}
+
+================
+File: components/hero-carousel.tsx
+================
+'use client'
+
+import Image from "next/image"
+import { useState } from "react"
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Button } from "@/components/ui/button"
+import { SearchForm } from "./search-form"
+
+const slides = [
+  {
+    image: "/placeholder.svg",
+    title: "UNLOCK AWARD-WINNING STAYS",
+    subtitle: "Experience luxury that takes you with Leaders Club",
+    location: "The Lowell, New York, United States",
+  },
+  // Add more slides as needed
+]
+
+export function HeroCarousel() {
+  const [currentSlide, setCurrentSlide] = useState(0)
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length)
+  }
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
+  }
+
+  return (
+    <div className="relative h-screen">
+      <div className="absolute inset-0">
+        <Image
+          src={slides[currentSlide].image}
+          alt={slides[currentSlide].title}
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/30" />
+      </div>
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center">
+        <h1 className="text-5xl md:text-7xl font-bold mb-4">
+          {slides[currentSlide].title}
+        </h1>
+        <p className="text-xl mb-8">{slides[currentSlide].subtitle}</p>
+        <p className="text-sm mb-12">{slides[currentSlide].location}</p>
+        <div className="w-full max-w-6xl px-4">
+          <SearchForm />
+        </div>
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute left-4 top-1/2 -translate-y-1/2 text-white"
+        onClick={prevSlide}
+      >
+        <ChevronLeft className="h-8 w-8" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-white"
+        onClick={nextSlide}
+      >
+        <ChevronRight className="h-8 w-8" />
+      </Button>
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+        {slides.map((_, index) => (
+          <button
+            key={index}
+            className={`h-2 w-2 rounded-full ${
+              index === currentSlide ? "bg-white" : "bg-white/50"
+            }`}
+            onClick={() => setCurrentSlide(index)}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+================
+File: components/hero-section.tsx
+================
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { ChevronRight } from 'lucide-react'
+import { SearchForm } from "./search-form"
+import { list } from '@vercel/blob';
+
+async function getHeroImage() {
+  const { blobs } = await list({prefix: 'lhw'});
+  const heroImage = blobs.find(blob => blob.pathname.includes('Luxurious'));
+  return heroImage ? heroImage.url : '/placeholder.svg';
+}
+
+export async function HeroSection() {
+  const heroImageUrl = await getHeroImage();
+
+  return (
+    <div className="relative h-screen">
+      <div className="absolute inset-0">
+        <Image
+          src={`${heroImageUrl}`}
+          alt="Luxury Hotel View"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/30" />
+      </div>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <div className="text-center space-y-6 mb-12">
+          <h1 className="text-white text-6xl md:text-7xl font-light tracking-wide max-w-4xl mx-auto leading-tight">
+            UNLOCK AWARD-WINNING STAYS
+          </h1>
+          <p className="text-white text-xl font-light tracking-wide">
+            See where bonus points take you with Leaders Club
+          </p>
+          <Button 
+            variant="outline" 
+            size="lg"
+            className="text-white border-white hover:bg-white hover:text-black transition-colors bg-transparent mt-4"
+          >
+            LEARN MORE
+            <ChevronRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+        <div className="w-full max-w-7xl px-4">
+          <SearchForm />
+        </div>
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white text-sm tracking-wider">
+          THE LOWELL, New York, United States
+        </div>
+      </div>
+    </div>
+  )
+}
+
+================
+File: components/hotel-showcase.tsx
+================
+import Image from "next/image"
+import Link from "next/link"
+import { list } from '@vercel/blob';
+
+export const revalidate = 86400;
+
+async function getHotelImages() {
+  const { blobs } = await list({prefix: 'lhw'});
+  const images = blobs.filter(image => !image.pathname.includes('Luxurious'));
+  return images.slice(1);
+}
+
+export async function HotelShowcase() {
+  const hotelImages = await getHotelImages();
+  const images1 = hotelImages.slice(1,3);
+  const images2 = hotelImages.slice(3,5);
+
+  
+    return (
+      <section className="py-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-4xl font-light text-center mb-4">WHERE TO NEXT?</h2>
+          <p className="text-sm tracking-wide text-center max-w-3xl mx-auto mb-16 text-gray-600">
+            COMPRISED OF MORE THAN 400 HOTELS IN OVER 80 COUNTRIES, LEADING HOTELS DISTINCT PROPERTIES MAKE UP
+            A COLLECTION OF INDEPENDENT AND UNCOMMON LUXURY HOTELS THROUGHOUT THE WORLD.
+          </p>
+          <div className="grid grid-cols-1 gap-y-8">
+            <div className="grid md:grid-cols-2 gap-x-8">
+              <div>
+                <h3 className="text-center text-sm font-medium tracking-wide text-[#9B7B4E] mb-4">NEW MEMBER HOTELS</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {images1.map((image, index) => (
+                    <Link key={index} href={`/hotels/${index + 1}`} className="block">
+                      <div className="aspect-[3/4] relative overflow-hidden">
+                        <Image
+                          src={image.url}
+                          alt={`New Member Hotel ${index + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h3 className="text-center text-sm fonat-medium tracking-wide text-[#9B7B4E] mb-4">MOST POPULAR HOTELS</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {images2.map((image, index) => (
+                    <Link key={index} href={`/hotels/${index + 3}`} className="block">
+                      <div className="aspect-[3/4] relative overflow-hidden">
+                        <Image
+                          src={image.url}
+                          alt={`Popular Hotel ${index + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+================
+File: components/luxury-experiences.tsx
+================
+export function LuxuryExperiences() {
+  return (
+    <section className="py-16 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl font-bold mb-8 text-center">Curated Luxury Experiences</h2>
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-xl font-semibold mb-4">Private Yacht Tours</h3>
+            <p>Explore crystal-clear waters in your own private yacht, complete with a personal chef and crew.</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-xl font-semibold mb-4">Michelin Star Dining</h3>
+            <p>Indulge in exquisite culinary experiences at world-renowned Michelin-starred restaurants.</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-xl font-semibold mb-4">Exclusive Spa Retreats</h3>
+            <p>Rejuvenate your body and mind with our specially curated spa packages in serene locations.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+================
+File: components/personalized-recommendations.tsx
+================
+export function PersonalizedRecommendations() {
+  return (
+    <section className="py-16 bg-white">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl font-bold mb-8 text-center">Personalized Recommendations</h2>
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="bg-gray-100 p-6 rounded-lg shadow-md">
+            <h3 className="text-xl font-semibold mb-4">Based on Your Preferences</h3>
+            <p>Our AI analyzes your past stays and preferences to suggest hotels that match your unique taste.</p>
+          </div>
+          <div className="bg-gray-100 p-6 rounded-lg shadow-md">
+            <h3 className="text-xl font-semibold mb-4">Seasonal Recommendations</h3>
+            <p>Discover the perfect destinations based on the current season and your travel history.</p>
+          </div>
+          <div className="bg-gray-100 p-6 rounded-lg shadow-md">
+            <h3 className="text-xl font-semibold mb-4">Exclusive Experiences</h3>
+            <p>Get personalized suggestions for unique experiences available at our curated selection of luxury hotels.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+================
+File: components/search-form.tsx
+================
+'use client'
+
+import { format } from "date-fns"
+import { CalendarIcon } from 'lucide-react'
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import React from "react"
+
+export function SearchForm() {
+  const [checkIn, setCheckIn] = React.useState<Date>()
+  const [checkOut, setCheckOut] = React.useState<Date>()
+
+  return (
+    <div className="bg-white/90 p-6 rounded-none backdrop-blur-sm max-w-7xl mx-auto">
+      <form className="flex items-center justify-center gap-4">
+        <Input
+          type="text"
+          placeholder="Hotel, City Or Country"
+          className="w-64 bg-white"
+        />
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-44 justify-start text-left font-normal bg-white",
+                !checkIn && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {checkIn ? format(checkIn, "MMM dd, yyyy") : <span>Check-In</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={checkIn}
+              onSelect={setCheckIn}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-44 justify-start text-left font-normal bg-white",
+                !checkOut && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {checkOut ? format(checkOut, "MMM dd, yyyy") : <span>Check-Out</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={checkOut}
+              onSelect={setCheckOut}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+        <Select defaultValue="1">
+          <SelectTrigger className="w-28 bg-white">
+            <SelectValue placeholder="Rooms" />
+          </SelectTrigger>
+          <SelectContent>
+            {[1, 2, 3, 4, 5].map((num) => (
+              <SelectItem key={num} value={num.toString()}>
+                {num} {num === 1 ? 'Room' : 'Rooms'}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select defaultValue="2">
+          <SelectTrigger className="w-28 bg-white">
+            <SelectValue placeholder="Adults" />
+          </SelectTrigger>
+          <SelectContent>
+            {[1, 2, 3, 4].map((num) => (
+              <SelectItem key={num} value={num.toString()}>
+                {num} {num === 1 ? 'Adult' : 'Adults'}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select defaultValue="0">
+          <SelectTrigger className="w-28 bg-white">
+            <SelectValue placeholder="Children" />
+          </SelectTrigger>
+          <SelectContent>
+            {[0, 1, 2, 3].map((num) => (
+              <SelectItem key={num} value={num.toString()}>
+                {num} {num === 1 ? 'Child' : 'Children'}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8">
+          SEARCH
+        </Button>
+      </form>
+    </div>
+  )
+}
+
+================
+File: components/virtual-concierge.tsx
+================
+export function VirtualConcierge() {
+  return (
+    <section className="py-16 bg-white">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl font-bold mb-8 text-center">Virtual Concierge</h2>
+        <div className="max-w-2xl mx-auto bg-gray-100 p-8 rounded-lg shadow-md">
+          <p className="text-lg mb-6">Our AI-powered Virtual Concierge is available 24/7 to assist you with any requests or inquiries.</p>
+          <button className="bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition-colors">
+            Chat with Virtual Concierge
+          </button>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+================
+File: lib/contentful.ts
+================
+import { createClient } from "contentful"
+
+export type LeadersBenefits = {
+  contentTypeId: 'leadersBenefits'
+  fields: {
+    title: string,
+    description: string
+  }
+}
+
+export type ExclusiveRatesContent = {
+  contentTypeId: 'exclusivesRates',
+  fields: {
+    title: string
+    subtitle: string
+    leadersBenefitsTitle: string
+    leadersBenefits: LeadersBenefits[]
+    rateGuaranteeTitle: string
+    rateGuaranteeDescription: string
+    ctaText: string
+  }
+}
+
+export default function createContentfulClient(isDraftMode: boolean = false) {
+  return createClient({
+    space: process.env.CONTENTFUL_SPACE_ID!,
+
+    // use the preview access token when preview is enabled
+    accessToken: isDraftMode
+      ? process.env.CONTENTFUL_PREVIEW_ACCESS_TOKEN!
+      : process.env.CONTENTFUL_ACCESS_TOKEN!,
+
+
+    // specify the preview host when preview is enabled
+    host: isDraftMode ? "preview.contentful.com" : undefined,
+  });
+}
+
+export async function getExclusiveRatesContent(isEnabled: boolean) {
+  try {
+    const contentClient = createContentfulClient(isEnabled);
+    const entries = await contentClient.getEntries<ExclusiveRatesContent>({
+      content_type: "exclusivesRates",
+      include: 2,
+      
+    })
+    if (!entries.items || entries.items.length === 0) {
+      console.error("No exclusive rates content found in Contentful")
+      return null
+    }
+
+    return entries.items[0].fields;
+  } catch (error) {
+    console.error("Error fetching exclusive rates content:", error)
+    return null
+  }
+}
+
+================
+File: lib/flags.ts
+================
+import { flag } from '@vercel/flags/next';
+import { get } from '@vercel/edge-config';
+
+export const showLuxuryExperiences = flag({
+  key: 'luxury-experiences',
+  async decide() {
+    const value = await get('luxury-experiences');
+    return value ?? false;
+  },
+});
+
+export const enableVirtualConcierge = flag({
+  key: 'virtual-concierge',
+  async decide() {
+    const value = await get('virtual-concierge');
+    return value ?? false;
+  },
+});
+
+export const offerExclusiveRates = flag({
+  key: 'exclusive-rates',
+  async decide() {
+    const value = await get('exclusive-rates');
+    return value ?? false;
+  },
+});
+
+export const showPersonalizedRecommendations = flag({
+  key: 'personalized-recommendations',
+  async decide() {
+    const value = await get('personalized-recommendations');
+    return value ?? false;
+  },
+});
+
+// a group of feature flags to be precomputed
+export const lhwFlags = [showLuxuryExperiences, enableVirtualConcierge, offerExclusiveRates, showPersonalizedRecommendations] as const;
+
+================
+File: lib/utils.ts
+================
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+================
+File: .eslintrc.json
+================
+{
+  "extends": ["next/core-web-vitals", "next/typescript"]
+}
+
+================
+File: .gitignore
+================
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+================
+File: components.json
+================
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "app/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "iconLibrary": "lucide"
+}
+
+================
+File: middleware.ts
+================
+import { type NextRequest, NextResponse } from 'next/server';
+import { precompute } from '@vercel/flags/next';
+import { lhwFlags } from './lib/flags';
+
+export const config = { matcher: ['/'] };
+
+
+
+export async function middleware(request: NextRequest) {
+  // precompute returns a string encoding each flag's returned value
+  const code = await precompute(lhwFlags);
+  // rewrites the request to include the precomputed code for this flag combination
+  const nextUrl = new URL(
+    `/${code}${request.nextUrl.pathname}${request.nextUrl.search}`,
+    request.url,
+  )
+  return NextResponse.rewrite(nextUrl, {request});
+}
+
+================
+File: next.config.mjs
+================
+// @ts-check
+import { withVercelToolbar } from '@vercel/toolbar/plugins/next';
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+    images: {
+        remotePatterns: [
+            {
+                hostname: "*.public.blob.vercel-storage.com"
+            }
+        ]
+    }
+};
+
+export default withVercelToolbar()(nextConfig);
+
+================
+File: package.json
+================
+{
+  "name": "lhw-clone",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^1.0.8",
+    "@contentful/live-preview": "^4.6.6",
+    "@contentful/vercel-nextjs-toolkit": "^1.4.1",
+    "@radix-ui/react-popover": "^1.1.3",
+    "@radix-ui/react-select": "^2.1.3",
+    "@radix-ui/react-slot": "^1.1.1",
+    "@vercel/blob": "^0.27.0",
+    "@vercel/edge-config": "^1.4.0",
+    "@vercel/flags": "^3.1.0",
+    "@vercel/toolbar": "^0.1.28",
+    "ai": "^4.0.18",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "contentful": "^11.4.6",
+    "date-fns": "^3.6.0",
+    "lucide-react": "^0.468.0",
+    "next": "14.2.16",
+    "react": "^18",
+    "react-day-picker": "^8.10.1",
+    "react-dom": "^18",
+    "tailwind-merge": "^2.5.5",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "dotenv": "^16.4.7",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.16",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  },
+  "packageManager": "pnpm@9.15.3+sha512.1f79bc245a66eb0b07c5d4d83131240774642caaa86ef7d0434ab47c0d16f66b04e21e0c086eb61e62c77efc4d7f7ec071afad3796af64892fae66509173893a"
+}
+
+================
+File: postcss.config.mjs
+================
+/** @type {import('postcss-load-config').Config} */
+const config = {
+  plugins: {
+    tailwindcss: {},
+  },
+};
+
+export default config;
+
+================
+File: README.md
+================
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+================
+File: script.mjs
+================
+import dotenv from 'dotenv';
+dotenv.config({path: '.env.development.local'})
+import { experimental_generateImage as generateImage } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { put } from '@vercel/blob';
+
+const imagePrompts = [
+  'Luxurious hotel suite with a freestanding bathtub overlooking a scenic mountain range',
+  'Elegant beachfront cabana with personalized butler service and champagne setup',
+  'Michelin-star restaurant interior with exquisite table setting and mood lighting',
+  'Opulent hotel facade with grand entrance and valet service at night',
+  'Serene yoga session on a private beach at sunrise with luxury resort in background'
+];
+
+async function generateAndSaveImage(prompt) {
+  try {
+    const { image } = await generateImage({
+      model: openai.image('dall-e-3'),
+      prompt,
+      size: '1024x1024',
+      providerOptions: {
+        openai: { style: 'vivid', quality: 'hd' }
+      }
+    });
+    const intArray = image.uint8Array;
+    console.log('array ', image.uint8Array);
+    const buffer = Buffer.from(intArray);
+    const name = prompt.split(' ')[0];
+    const filename = `lhw/${name}.png`;
+    const { url } = await put(filename, buffer, { access: 'public' });
+
+    return url;
+  } catch (error) {
+    console.error(`Error generating/saving image for prompt: ${prompt}, `, error);
+  }
+}
+
+async function main() {
+  for (const prompt of imagePrompts) {
+    const response = await generateAndSaveImage(prompt);
+    console.log('response ', response);
+  }
+}
+
+main().catch(console.error);
+
+================
+File: tailwind.config.ts
+================
+import type { Config } from "tailwindcss";
+
+const config: Config = {
+    darkMode: ["class"],
+    content: [
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+  	extend: {
+  		colors: {
+  			background: 'hsl(var(--background))',
+  			foreground: 'hsl(var(--foreground))',
+  			card: {
+  				DEFAULT: 'hsl(var(--card))',
+  				foreground: 'hsl(var(--card-foreground))'
+  			},
+  			popover: {
+  				DEFAULT: 'hsl(var(--popover))',
+  				foreground: 'hsl(var(--popover-foreground))'
+  			},
+  			primary: {
+  				DEFAULT: 'hsl(var(--primary))',
+  				foreground: 'hsl(var(--primary-foreground))'
+  			},
+  			secondary: {
+  				DEFAULT: 'hsl(var(--secondary))',
+  				foreground: 'hsl(var(--secondary-foreground))'
+  			},
+  			muted: {
+  				DEFAULT: 'hsl(var(--muted))',
+  				foreground: 'hsl(var(--muted-foreground))'
+  			},
+  			accent: {
+  				DEFAULT: 'hsl(var(--accent))',
+  				foreground: 'hsl(var(--accent-foreground))'
+  			},
+  			destructive: {
+  				DEFAULT: 'hsl(var(--destructive))',
+  				foreground: 'hsl(var(--destructive-foreground))'
+  			},
+  			border: 'hsl(var(--border))',
+  			input: 'hsl(var(--input))',
+  			ring: 'hsl(var(--ring))',
+  			chart: {
+  				'1': 'hsl(var(--chart-1))',
+  				'2': 'hsl(var(--chart-2))',
+  				'3': 'hsl(var(--chart-3))',
+  				'4': 'hsl(var(--chart-4))',
+  				'5': 'hsl(var(--chart-5))'
+  			}
+  		},
+  		borderRadius: {
+  			lg: 'var(--radius)',
+  			md: 'calc(var(--radius) - 2px)',
+  			sm: 'calc(var(--radius) - 4px)'
+  		}
+  	}
+  },
+  plugins: [require("tailwindcss-animate")],
+};
+export default config;
+
+================
+File: tsconfig.json
+================
+{
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+
+
+
+================================================================
+End of Codebase
+================================================================

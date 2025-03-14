@@ -5,14 +5,13 @@ import { LuxuryExperiences } from "@/components/luxury-experiences"
 import { VirtualConcierge } from "@/components/virtual-concierge"
 import { ExclusiveRates } from "@/components/exclusive-rates"
 import { PersonalizedRecommendations } from "@/components/personalized-recommendations"
-import { showLuxuryExperiences, enableVirtualConcierge, offerExclusiveRates, showPersonalizedRecommendations } from '../lib/flags'
 
-
-export default async function Home() {
-  const luxuryExperiences = await showLuxuryExperiences();
-  const virtualConcierge = await enableVirtualConcierge();
-  const exclusiveRates = await offerExclusiveRates();
-  const personalizedRecommendations = await showPersonalizedRecommendations();
+export default function Home() {
+  // For this example, we'll assume all features are enabled
+  const luxuryExperiences = true
+  const virtualConcierge = true
+  const exclusiveRates = true
+  const personalizedRecommendations = true
 
   return (
     <main>
