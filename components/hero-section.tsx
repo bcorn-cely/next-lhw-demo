@@ -29,7 +29,7 @@ export async function HeroSection() {
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <div className="text-center space-y-6 mb-12">
           <h1 className="text-white text-6xl md:text-7xl font-light tracking-wide max-w-4xl mx-auto leading-tight">
-            UNLOCK AWARD-WINNING STAYS
+            check me out
           </h1>
           <p className="text-white text-xl font-light tracking-wide">
             See where bonus points take you with Leaders Club
